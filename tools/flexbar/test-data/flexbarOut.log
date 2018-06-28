@@ -1,0 +1,78 @@
+
+               ________          __              
+              / ____/ /__  _  __/ /_  ____ ______
+             / /_  / / _ \| |/ / __ \/ __ `/ ___/
+            / __/ / /  __/>  </ /_/ / /_/ / /    
+           /_/   /_/\___/_/|_/_.___/\__._/_/     
+
+Flexbar - flexible barcode and adapter removal, version 3.3.0
+Developed with SeqAn, the library for sequence analysis
+
+Available on github.com/seqan/flexbar
+
+
+Local time:            Tue Jun 26 13:05:45 2018
+
+Number of threads:     1
+Bundled fragments:     256
+
+Target name:           flexbarOut
+File type:             fastq
+Reads file:            in.fastq
+Barcode file:          sample.fa
+
+max-uncalled:          0
+min-read-length:       18
+
+barcode-trim-end:      LTAIL
+barcode-error-rate:    0
+barcode-match:         1
+barcode-mismatch:     -1
+barcode-gap:          -9
+
+Barcode:               Sequence:
+derice                 ACTGACTAGCTAGCTAACTG
+sanka                  GCATCGTAGCTAGCTACGAT
+junior                 CATCGATCGTACGTACGTAG
+yul                    ATCGATCGATCGTACGATCG
+
+
+Processing reads ...done.
+
+Elapsed time:  < 1 sec
+
+
+Output file statistics
+======================
+Read file:               flexbarOut_barcode_derice.fastq
+  written reads          0
+  short reads            0
+
+Read file:               flexbarOut_barcode_sanka.fastq
+  written reads          0
+  short reads            0
+
+Read file:               flexbarOut_barcode_junior.fastq
+  written reads          0
+  short reads            0
+
+Read file:               flexbarOut_barcode_yul.fastq
+  written reads          0
+  short reads            0
+
+
+Filtering statistics
+====================
+Processed reads                   250
+  skipped due to uncalled bases     0
+  skipped unassigned reads        250
+  finally skipped short reads       0
+Discarded reads overall           250
+Remaining reads                     0   (0%)
+
+Processed bases   7750
+Remaining bases      0   (0% of input)
+
+
+Flexbar completed barcode removal within reads.
+

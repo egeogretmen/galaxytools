@@ -1,0 +1,408 @@
+<tool id="flexbar" name="Flexible barcode and adapter removal" version="3.3.0">
+    <requirements>
+        <requirement type="package" version="3.3.0">flexbar</requirement>
+    </requirements>
+    <command detect_errors="exit_code">
+        <![CDATA[
+        mkdir outputs &&
+        ln -s '$input1' in.${input1.ext} &&
+        flexbar -r in.${input1.ext} --version-check 0 -t "./outputs/flexbarOut"
+        #if $mode.param == 'barcode_detection'
+            #if $mode.barcodes
+                -b $mode.barcodes
+            #end if
+            #if $mode.barcodes2
+                -b2 $mode.barcodes2
+            #end if
+            #if $mode.barcode_reads
+                -br $mode.barcode_reads
+            #end if
+            #if $mode.barcode_min_overlap
+                -bo $mode.barcode_min_overlap
+            #end if
+            -bt $mode.barcode_error_rate
+            -be $mode.barcode_trim_end
+            #if $mode.barcode_tail_length
+                -bn $mode.barcode_tail_length
+            #end if
+            $mode.barcode_keep
+            $mode.barcode_unassigned
+            -bm $mode.barcode_match
+            -bi $mode.barcode_mismatch
+            -bg $mode.barcode_gap
+        #end if
+        #if $mode.param == 'adapter_removal'
+            #if $mode.adapters
+                -a $mode.adapters
+            #end if
+            #if $mode.adapters2
+                -a2 $mode.adapters2
+            #end if
+            #if $mode.adapter_seq
+                -as $mode.adapter_seq
+            #end if
+            -ao $mode.adapter_min_overlap
+            -at $mode.adapter_error_rate
+            -ae $mode.adapter_trim_end
+            #if $mode.adapter_tail_length
+                -an $mode.adapter_tail_length
+            #end if
+            $mode.adapter_relaxed
+            #if $mode.adapter_revcomp
+                -ac $mode.adapter_revcomp
+            #end if
+            #if $mode.adapter_pair_overlap
+                -ap $mode.adapter_pair_overlap
+            #end if
+            -av $mode.adapter_min_poverlap
+            #if $mode.adapter_read_set
+                -ar $mode.adapter_read_set
+            #end if
+            $mode.barcode_keep
+            -ay $mode.adapter_cycles
+            -am $mode.adapter_match
+            -ai $mode.adapter_mismatch
+            -ag $mode.adapter_gap
+        #end if
+        #if $mode.param == 'quality_based_trimming'
+            #if $mode.qtrim
+                -q $mode.qtrim
+            #end if
+            #if $mode.qtrim_format
+                -qf $mode.qtrim_format
+            #end if
+            -qt $mode.qtrim_threshold
+            -qw $mode.qtrim_win_size
+            $mode.qtrim_post_removal
+        #end if
+        #if $settings.advanced == 'advanced'
+            -n $settings.threads
+            -N $setttings.bundle
+            #if $settings.reads2
+                -p $settings.reads2
+            #end if
+            $settings.interleaved
+        #end if
+    ]]>
+    </command>
+    <inputs>
+        <param type="data" name="input1" format="fasta,fastq,fa,fq,fastq.gz,fastq.bz2"/>
+        <conditional name="mode">
+            <param name="param" type="select" label="Select the mode to use">
+                <option value="default" selected="true">Default</option>
+                <option value="barcode_detection">Barcode Detection</option>
+                <option value="adapter_removal">Adapter Removal</option>
+                <option value="quality_based_trimming">Quality Based Trimming</option>
+            </param>
+            <when value="default"></when>
+            <when value="barcode_detection">
+                <param
+                    name="barcodes"
+                    type="data"
+                    format="fasta,fa"
+                    label="Fasta file with barcodes for demultiplexing, may contain N"
+                    optional="True"/>
+                <param
+                    name="barcodes2"
+                    type="data"
+                    format="fasta"
+                    label="Additional barcodes file for second read set in paired mode"
+                    optional="True"/>
+                <param
+                    name="barcode_reads"
+                    type="data"
+                    format="fasta,fastq"
+                    label="Fasta/q file containing separate barcode reads for detection"
+                    optional="True"/>
+                <param
+                    name="barcode_min_overlap"
+                    type="integer"
+                    label="Minimum overlap of barcode and read. Default: barcode length."
+                    optional="True"/>
+                <param
+                    name="barcode_error_rate"
+                    type="float"
+                    value="0.0"
+                    label="Error rate threshold for mismatches and gaps"/>
+                <param
+                    name="barcode_trim_end"
+                    type="select"
+                    label="Type of detection, see section trim-end modes">
+                    <option value="ANY">ANY</option>
+                    <option value="LEFT">LEFT</option>
+                    <option value="RIGHT">RIGHT</option>
+                    <option value="LTAIL" selected="true">LTAIL</option>
+                    <option value="RTAIL">RTAIL</option>
+                </param>
+                <param
+                    name="barcode_tail_length"
+                    type="integer"
+                    label="Keep barcodes within reads instead of removal."
+                    optional="True"/>
+                <param
+                    name="barcode_keep"
+                    type="boolean"
+                    truevalue="-bk"
+                    falsevalue=""
+                    label="Keep barcodes within reads instead of removal."/>
+                <param
+                    name="barcode_unassigned"
+                    type="boolean"
+                    truevalue="-bu"
+                    falsevalue=""
+                    label="Include unassigned reads in output generation"/>
+                <param
+                    name="barcode_match"
+                    type="integer"
+                    value="1"
+                    label="Alignment match score"/>
+                <param
+                    name="barcode_mismatch"
+                    type="integer"
+                    value="-1"
+                    label="Alignment mismatch score"/>
+                <param
+                    name="barcode_gap"
+                    type="integer"
+                    value="-9"
+                    label="Alignment gap score"/>
+            </when>
+            <when value="adapter_removal">
+                <param
+                    name="adapters"
+                    type="data"
+                    format="fasta"
+                    label="Fasta file with adapters for removal that may contain N"
+                    optional="True"/>
+                <param
+                    name="adapters2"
+                    type="data"
+                    format="fasta"
+                    label="File with extra adapters for second read set in paired mode"
+                    optional="True"/>
+                <param
+                    name="adapter_seq"
+                    type="text"
+                    label="Single adapter sequence as alternative to adapters option"
+                    optional="True"/>
+                <param
+                    name="adapter_min_overlap"
+                    type="integer"
+                    label="Minimum overlap for removal without pair overlap"
+                    value="3"/>
+                <param
+                    name="adapter_error_rate"
+                    type="float"
+                    value="0.1"
+                    label="Error rate threshold for mismatches and gaps"/>
+                <param
+                    name="adapter_trim_end"
+                    type="text"
+                    label="Type of removal, see section trim-end modes"
+                    value="RIGHT"/>
+                <param
+                    name="adapter_tail_length"
+                    type="integer"
+                    label="Region size for tail trim-end modes. Default: adapter length"
+                    optional="True"/>
+                <param
+                    name="adapter_relaxed"
+                    type="boolean"
+                    truevalue="-ax"
+                    falsevalue=""
+                    label="Skip restriction to pass read ends in right and left modes"/>
+                <param
+                    name="adapter_revcomp"
+                    type="select"
+                    label="Include reverse complements of adapters"
+                    optional="True">
+                    <option value="ON">ON</option>
+                    <option value="ONLY">ONLY</option>
+                </param>
+                <param
+                    name="adapter_pair_overlap"
+                    type="select"
+                    label="Overlap detection of paired reads"
+                    optional="True">
+                    <option value="ON">ON</option>
+                    <option value="SHORT">SHORT</option>
+                    <option value="ONLY">ONLY</option>
+                </param>
+                <param
+                    name="adapter_min_poverlap"
+                    type="integer"
+                    label="Minimum overlap of paired reads for detection"
+                    value="40"/>
+                <param
+                    name="adapter_read_set"
+                    type="select"
+                    label="Consider only single read set for adapters. One of 1 and 2"
+                    optional="true">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                </param>
+                <param
+                    name="adapter_cycles"
+                    type="integer"
+                    label="Number of adapter removal cycles"
+                    value="1"/>
+                <param
+                    name="adapter_match"
+                    type="integer"
+                    label="Alignment match score"
+                    value="1"/>
+                <param
+                    name="adapter_mismatch"
+                    type="integer"
+                    label="Alignment mismatch score"
+                    value="-1"/>
+                <param
+                    name="adapter_gap"
+                    type="integer"
+                    label="Alignment gap score"
+                    value="-6"/>
+            </when>
+            <when value="quality_based_trimming">
+                <param name="qtrim" type="text" label="Quality-based trimming mode">
+                    <option value="TAIL">TAIL</option>
+                    <option value="WIN">WIN</option>
+                    <option value="BWA">BWA</option>
+                </param>
+                <param name="qtrim_format" type="text" label="Quality format">
+                    <option value="sanger">sanger</option>
+                    <option value="solexa">solexa</option>
+                    <option value="i1.3">i1.3</option>
+                    <option value="i1.5">i1.5</option>
+                    <option value="i1.8">i1.8</option>
+                </param>
+                <param
+                    name="qtrim_threshold"
+                    type="integer"
+                    label="Minimum quality as threshold for trimming"
+                    value="20"/>
+                <param
+                    name="qtrim_win_size"
+                    type="integer"
+                    label="Region size for sliding window approach"
+                    value="5"/>
+                <param
+                    name="qtrim_post_removal"
+                    type="boolean"
+                    label="Perform quality-based trimming after removal steps"
+                    truevalue="-qa"
+                    falsevalue=""/>
+
+            </when>
+        </conditional>
+        <conditional name="settings">
+            <param name="advanced" type="select" label="Specify advanced parameters">
+                <option value="simple" selected="true">No, use program defaults.</option>
+                <option value="advanced">Yes, see advanced parameter list.</option>
+            </param>
+            <when value="simple"></when>
+            <when value="advanced">
+                <param name="threads" type="integer" label="# of threads" value="1" min="1"/>
+                <param
+                    name="bundle"
+                    type="integer"
+                    label="Number of read pairs per thread"
+                    value="256"/>
+                <param
+                    name="reads2"
+                    type="data"
+                    format="fastq,fq,gz,bz2"
+                    label="Second input file of paired reads, gz and bz2 files supported"/>
+                <param
+                    name="interleaved"
+                    type="boolean"
+                    label="Interleaved format for first input set with paired reads"
+                    checked="false"
+                    truevalue="-i"
+                    falsevalue=""/>
+            </when>
+        </conditional>
+    </inputs>
+    <outputs>
+        <data format="txt" name="report">
+            <discover_datasets
+                pattern="__designation_and_ext__"
+                directory="outputs"
+                visible="true"/>
+        </data>
+    </outputs>
+    <tests>
+        <test>
+            <param name="input1" ftype="fastq" value="in.fastq"/>
+            <output name="report">
+                <discovered_dataset
+                    designation="flexbarOut"
+                    ftype="fastq"
+                    file="flexbarOut.fastq"/>
+            </output>
+        </test>
+        <test>
+            <param name="input1" ftype="fastq.gz" value="in.fastq.gz"/>
+            <output name="report">
+                <discovered_dataset
+                    designation="flexbarOut"
+                    ftype="fastq"
+                    file="flexbarOut.fastq"/>
+            </output>
+        </test>
+        <test>
+            <param name="input1" ftype="fastq" value="in.fastq"/>
+            <param name="mode.barcodes" ftype="fasta" value="sample.fa"/>
+            <output name="report">
+                <discovered_dataset
+                    designation="flexbarOut_barcode_derice"
+                    ftype="fastq"
+                    file="flexbarOut_barcode_derice.fastq"/>
+                <discovered_dataset
+                    designation="flexbarOut_barcode_junior"
+                    ftype="fastq"
+                    file="flexbarOut_barcode_junior.fastq"/>
+                <discovered_dataset
+                    designation="flexbarOut_barcode_sanka"
+                    ftype="fastq"
+                    file="flexbarOut_barcode_sanka.fastq"/>
+                <discovered_dataset
+                    designation="flexbarOut_barcode_yul"
+                    ftype="fastq"
+                    file="flexbarOut_barcode_yul.fastq"/>
+            </output>
+        </test>
+
+    </tests>
+    <help>
+        <![CDATA[
+
+**What it does**
+
+The program Flexbar preprocesses high-throughput sequencing data efficiently. It demultiplexes barcoded runs and
+removes adapter sequences. Moreover, trimming and filtering features are provided. Flexbar increases read mapping
+rates and improves genome as well as transcriptome assemblies. Unique molecular identifiers can be extracted in a
+flexible way. The program supports sequencing data in fasta and fastq format, e.g. from the Illumina platform.
+Refer to the manual on github.com/seqan/flexbar/wiki or contact Johannes Roehr on github.com/jtroehr for support
+with this application.
+
+**Inputs**
+
+**Outputs**
+
+**Trim-end modes**
+
+ANY: longer side of read remains after removal of overlap
+LEFT: right side remains after removal, align <= read end
+RIGHT: left part remains after removal, align >= read start
+LTAIL: consider first n bases of reads in alignment
+RTAIL: use only last n bases, see tail-length options
+
+    ]]>
+    </help>
+    <citations>
+        <citation type="bibtex">
+            @misc{githubflexbar, author = {LastTODO, FirstTODO}, year = {TODO}, title =
+            {flexbar}, publisher = {GitHub}, journal = {GitHub repository}, url =
+            {https://github.com/seqan/flexbar}, }</citation>
+    </citations>
+</tool>
