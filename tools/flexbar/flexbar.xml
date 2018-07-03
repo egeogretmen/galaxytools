@@ -6,16 +6,37 @@
         <![CDATA[
         mkdir outputs &&
         ln -s '$input1' in.${input1.ext} &&
+        #if $mode.param == 'barcode_detection'
+            #if $mode.barcodes
+                ln -s '${mode.barcodes}' barcodes.${mode.barcodes.ext} &&
+            #end if
+            #if $mode.barcodes2
+                ln -s '${mode.barcodes2}' barcodes2.${mode.barcodes2.ext} &&
+            #end if
+            #if $mode.barcode_reads
+                ln -s '${mode.barcode_reads}' barcode_reads.${mode.barcode_reads.ext} &&
+            #end if
+        #end if
+
+        #if $mode.param == 'adapter_removal'
+            #if $mode.adapters
+                ln -s '${mode.adapters}' adapters.${mode.adapters.ext} &&
+            #end if
+            #if $mode.adapters2
+                ln -s '${mode.adapters2}' adapters2.${mode.adapters2.ext} &&
+            #end if
+        #end if
+
         flexbar -r in.${input1.ext} --version-check 0 -t "./outputs/flexbarOut"
         #if $mode.param == 'barcode_detection'
             #if $mode.barcodes
-                -b $mode.barcodes
+                -b barcodes.${mode.barcodes.ext}
             #end if
             #if $mode.barcodes2
-                -b2 $mode.barcodes2
+                -b2 barcodes2.${mode.barcodes2.ext}
             #end if
             #if $mode.barcode_reads
-                -br $mode.barcode_reads
+                -br barcode_reads.${mode.barcode_reads.ext}
             #end if
             #if $mode.barcode_min_overlap
                 -bo $mode.barcode_min_overlap
@@ -33,10 +54,10 @@
         #end if
         #if $mode.param == 'adapter_removal'
             #if $mode.adapters
-                -a $mode.adapters
+                -a adapters.${mode.adapters.ext}
             #end if
             #if $mode.adapters2
-                -a2 $mode.adapters2
+                -a2 adapters2.${mode.adapters2.ext}
             #end if
             #if $mode.adapter_seq
                 -as $mode.adapter_seq
@@ -86,7 +107,7 @@
     ]]>
     </command>
     <inputs>
-        <param type="data" name="input1" format="fasta,fastq,fa,fq,fastq.gz,fastq.bz2"/>
+        <param type="data" name="input1" format="fasta,fastq,fastq.gz,fastq.bz2"/>
         <conditional name="mode">
             <param name="param" type="select" label="Select the mode to use">
                 <option value="default" selected="true">Default</option>
@@ -99,7 +120,7 @@
                 <param
                     name="barcodes"
                     type="data"
-                    format="fasta,fa"
+                    format="fasta"
                     label="Fasta file with barcodes for demultiplexing, may contain N"
                     optional="True"/>
                 <param
@@ -310,7 +331,7 @@
                 <param
                     name="reads2"
                     type="data"
-                    format="fastq,fq,gz,bz2"
+                    format="fastq,fastq.gz,fastq.bz2"
                     label="Second input file of paired reads, gz and bz2 files supported"/>
                 <param
                     name="interleaved"
@@ -351,7 +372,10 @@
         </test>
         <test>
             <param name="input1" ftype="fastq" value="in.fastq"/>
-            <param name="mode.barcodes" ftype="fasta" value="sample.fa"/>
+            <conditional name="mode">
+                <param name="param" value="barcode_detection" />
+                <param name="barcodes" ftype="fasta" value="sample.fa"/>
+            </conditional>
             <output name="report">
                 <discovered_dataset
                     designation="flexbarOut_barcode_derice"
